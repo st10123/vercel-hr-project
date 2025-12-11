@@ -8,24 +8,25 @@ import { TrendingUp, Download, Filter, Search, User } from "lucide-react"
 import { useState } from "react"
 
 const vehicles = [
-  { id: 1, name: "トヨタ プリウス 2018年", type: "普通自動車" },
-  { id: 2, name: "ホンダ フィット 2020年", type: "普通自動車" },
-  { id: 3, name: "スズキ ジムニー 2015年", type: "軽自動車" },
-  { id: 4, name: "ヤマハ YZF-R6 2019年", type: "バイク" },
-  { id: 5, name: "日産 セレナ 2017年", type: "普通自動車" },
+  { id: 1, name: "ヤマハ YZF-R6 2019年", type: "スポーツバイク" },
+  { id: 2, name: "ホンダ CB400SF 2020年", type: "ネイキッド" },
+  { id: 3, name: "スズキ GSX-R750 2015年", type: "スポーツバイク" },
+  { id: 4, name: "カワサキ Ninja 2021年", type: "スポーツバイク" },
+  { id: 5, name: "トヨタ プリウス 2017年", type: "普通自動車" },
   { id: 6, name: "ダイハツ ムーヴ 2016年", type: "軽自動車" },
-  { id: 7, name: "カワサキ Ninja 2021年", type: "バイク" },
+  { id: 7, name: "ホンダ PCX 2018年", type: "スクーター" },
   { id: 8, name: "マツダ CX-5 2018年", type: "普通自動車" },
 ]
 
 const generateVehicleEstimate = (vehicleId: number) => {
   const vehicle = vehicles[vehicleId - 1]
-  const basePrice = 1200000
+  const isMotorbike = vehicle.type.includes("バイク") || vehicle.type === "スクーター" || vehicle.type === "ネイキッド"
+  const basePrice = isMotorbike ? 600000 : 1200000
   const adjustments = {
-    車種: Math.round((Math.random() - 0.5) * 400000),
-    走行距離: -Math.round(Math.random() * 300000),
-    状態: Math.round((Math.random() - 0.5) * 300000),
-    年式: -Math.round(Math.random() * 250000),
+    車種: Math.round((Math.random() - 0.5) * (isMotorbike ? 250000 : 400000)),
+    走行距離: -Math.round(Math.random() * (isMotorbike ? 150000 : 300000)),
+    状態: Math.round((Math.random() - 0.5) * (isMotorbike ? 200000 : 300000)),
+    年式: -Math.round(Math.random() * (isMotorbike ? 150000 : 250000)),
   }
 
   const finalPrice = Math.round(basePrice + Object.values(adjustments).reduce((a, b) => a + b, 0))
@@ -34,7 +35,7 @@ const generateVehicleEstimate = (vehicleId: number) => {
     vehicle,
     basePrice,
     adjustments,
-    finalPrice: Math.max(finalPrice, 50000),
+    finalPrice: Math.max(finalPrice, 30000),
   }
 }
 
@@ -259,15 +260,16 @@ export function ReportsDashboard() {
                         <span className="text-sm font-bold text-accent">1</span>
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-foreground mb-2">車種別市場相場の適用</div>
+                        <div className="font-semibold text-foreground mb-2">バイク/スクーター車種別市場相場の適用</div>
                         <div className="text-sm text-muted-foreground leading-relaxed">
-                          {selectedVehicleInfo?.type}は現在の市場相場で
-                          {selectedVehicleInfo?.type === "バイク" ? "高い需要" : "安定した需要"}
-                          があります。査定システムは過去1年間のオークション実績データと全国の流通相場を参照し、該当車種の適正な基準価格を算定しています。
-                          {selectedVehicleInfo?.type === "バイク"
-                            ? "スポーツバイクは若年層の需要が高く"
-                            : "ファミリーカーは市場流動性が高く"}
-                          、査定額に正の影響を与えています。
+                          {selectedVehicleInfo?.type === "スポーツバイク"
+                            ? "スポーツバイクは若年層および走行を重視するライダーからの需要が高く、現在の市場相場では安定した流動性を保持しています。"
+                            : selectedVehicleInfo?.type === "ネイキッド"
+                              ? "ネイキッド系バイクは幅広い年代層に支持され、カスタマイズベースとしての人気も高く、市場流動性に優れています。"
+                              : selectedVehicleInfo?.type === "スクーター"
+                                ? "スクーターは初心者ライダーや日常の足として人気が高く、市場需要は堅調です。"
+                                : "このカテゴリは現在の市場相場で安定した需要があります。"}
+                          査定システムは過去1年間のオークション実績データと全国の流通相場を参照し、該当車種の適正な基準価格を算定しています。排気量区分別の市場動向も反映されています。
                         </div>
                       </div>
                     </div>
@@ -281,7 +283,7 @@ export function ReportsDashboard() {
                       <div className="flex-1">
                         <div className="font-semibold text-foreground mb-2">走行距離による価値減衰の算定</div>
                         <div className="text-sm text-muted-foreground leading-relaxed">
-                          走行距離は車両の劣化度を示す最も重要な指標です。業界標準では年平均1万km走行を基準として、これを超える場合は1万km当たり約3～5万円の減額を適用します。非線形の減衰曲線を使用し、初期段階での減衰率を大きく、走行距離が多いほど減衰率を調整することで、より正確な査定を実現しています。
+                          走行距離はバイク・スクーターの劣化度を示す最も重要な指標です。バイクの場合、年平均3,000～5,000km走行が標準とされており、これを超える場合はエンジン部品の摩耗が加速します。査定システムでは1,000km当たり約2～3万円の減額を非線形で適用し、特に走行距離が少ないバイクには優遇金を付与します。エンジン焼き付きのリスク評価も組み込まれています。
                         </div>
                       </div>
                     </div>
@@ -293,9 +295,9 @@ export function ReportsDashboard() {
                         <span className="text-sm font-bold text-sky-600">3</span>
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-foreground mb-2">車体状態の多次元評価</div>
+                        <div className="font-semibold text-foreground mb-2">バイク状態の多角的評価</div>
                         <div className="text-sm text-muted-foreground leading-relaxed">
-                          外装の傷、塗装の浮き、内装の汚損度、機関の動作状況など複数の評価軸を機械学習モデルで総合評価しています。ヒアリング内容から抽出された状態情報に基づき、同一年式・走行距離の平均車に対する相対的な状態指数を算出し、加減調整を決定します。良好な状態の車両は正の補正を受け、一般的な状態の車両との差別化が反映されます。
+                          外装の傷やサビ、フレーム歪み、タイヤの劣化度、チェーンとスプロケットの摩耗、エンジンからのオイル漏れなど、バイク特有の評価軸を機械学習モデルで総合評価しています。ヒアリング内容から抽出されたメンテナンス履歴、事故歴の有無、カスタマイズ状況も加味され、同一年式・走行距離の平均バイクに対する相対的な状態指数を算出します。良好にメンテナンスされたバイクは正の補正を受けます。
                         </div>
                       </div>
                     </div>
@@ -309,7 +311,7 @@ export function ReportsDashboard() {
                       <div className="flex-1">
                         <div className="font-semibold text-foreground mb-2">年式による経年価値減衰</div>
                         <div className="text-sm text-muted-foreground leading-relaxed">
-                          経過年数は技術的陳腐化と市場での競争力低下を示します。査定モデルでは経過年数に対して逓増的な減衰関数を適用し、同一年式の標準車との比較に基づいて調整額を算出します。初年度登録からの経過年数、そして新型モデル登場の影響度も考慮され、より精密な減額調整が実施されています。
+                          経過年数はバイクの技術的陳腐化と部品供給の継続性を示す重要な要素です。査定モデルでは経過年数に対して逓増的な減衰関数を適用し、新型モデル登場による旧型化の影響も動的に反映します。特に7年以上前のモデルについては、排出ガス規制への適合性やECU関連の部品供給状況も考慮され、より精密な減額調整が実施されています。
                         </div>
                       </div>
                     </div>
@@ -319,7 +321,7 @@ export function ReportsDashboard() {
                 <div className="mt-6 p-4 bg-accent/5 border border-accent/20 rounded-lg">
                   <div className="text-sm text-foreground font-medium">査定精度について</div>
                   <div className="text-xs text-muted-foreground mt-2">
-                    当システムの査定は直近1年のマーケットデータに基づいており、実際の買取価格は査定額の±5～10%の幅で変動する可能性があります。
+                    当システムの査定は直近1年のマーケットデータに基づいており、実際の買取価格は査定額の±8～12%の幅で変動する可能性があります。特に希少モデルやカスタムバイクの場合は差異が大きくなる可能性があります。
                   </div>
                 </div>
               </CardContent>
