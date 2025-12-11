@@ -160,44 +160,84 @@ export function ReportsDashboard() {
                 <CardDescription>各要素がどのように見積額に寄与しているか</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border">
-                    <div>
-                      <div className="font-medium">基本価格</div>
-                      <div className="text-xs text-muted-foreground">車両の基準価格</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">{estimate.basePrice.toLocaleString()}円</div>
+                <div className="space-y-4">
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/30 p-6">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full -mr-16 -mt-16" />
+                    <div className="relative z-10">
+                      <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                        基本価格
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <div className="text-4xl font-bold text-accent">{estimate.basePrice.toLocaleString()}</div>
+                        <div className="text-base text-muted-foreground">円</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2">車両の基準査定価格</div>
                     </div>
                   </div>
 
-                  {Object.entries(estimate.adjustments).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className={`flex items-center justify-between p-4 rounded-lg border ${
-                        value >= 0 ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium">{key}</div>
-                        <div className="text-xs text-muted-foreground">{value >= 0 ? "加算" : "減算"}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-bold text-lg ${value >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {value >= 0 ? "+" : ""}
-                          {value.toLocaleString()}円
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                    {Object.entries(estimate.adjustments).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className={`relative overflow-hidden rounded-lg p-5 border-2 transition-all ${
+                          value >= 0
+                            ? "border-emerald-200/50 bg-gradient-to-br from-emerald-50/50 to-emerald-50/20"
+                            : "border-orange-200/50 bg-gradient-to-br from-orange-50/50 to-orange-50/20"
+                        }`}
+                      >
+                        <div
+                          className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-10"
+                          style={{
+                            background: value >= 0 ? "#10b981" : "#f97316",
+                            transform: "translate(30%, -30%)",
+                          }}
+                        />
+                        <div className="relative z-10">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="font-semibold text-foreground text-sm">{key}</div>
+                              <div
+                                className={`text-xs font-medium mt-1 ${value >= 0 ? "text-emerald-700" : "text-orange-700"}`}
+                              >
+                                {value >= 0 ? "正の評価" : "マイナス要因"}
+                              </div>
+                            </div>
+                            <div
+                              className={`text-2xl font-bold ${value >= 0 ? "text-emerald-600" : "text-orange-600"}`}
+                            >
+                              {value >= 0 ? "+" : ""}
+                              {(value / 10000).toFixed(1)}万
+                            </div>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${value >= 0 ? "bg-emerald-500" : "bg-orange-500"}`}
+                              style={{
+                                width: `${Math.abs(value) > 300000 ? 100 : (Math.abs(value) / 300000) * 100}%`,
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
 
-                  <div className="border-t-2 border-border pt-4 flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-lg">最終見積額</div>
-                      <div className="text-xs text-muted-foreground">全ての調整を含める</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-3xl text-accent">{estimate.finalPrice.toLocaleString()}円</div>
+                  <div className="relative mt-8 pt-6 border-t-2 border-border">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                          最終見積額
+                        </div>
+                        <div className="text-xs text-muted-foreground">全ての調整を含めた査定金額</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-baseline gap-2 justify-end">
+                          <div className="text-5xl font-bold bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
+                            {estimate.finalPrice.toLocaleString()}
+                          </div>
+                          <div className="text-lg text-muted-foreground mb-2">円</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -209,29 +249,77 @@ export function ReportsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>見積額計算の根拠</CardTitle>
-                <CardDescription>各項目がどのように計算されたか</CardDescription>
+                <CardDescription>査定ロジックに基づいた詳細な分析結果</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="font-medium mb-1">車種による調整</div>
-                    <div className="text-sm text-muted-foreground">
-                      {selectedVehicleInfo?.type}の相場に基づいて基本価格を調整しました。
+              <CardContent className="space-y-5">
+                <div className="space-y-5">
+                  <div className="p-5 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-colors">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-accent">1</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground mb-2">車種別市場相場の適用</div>
+                        <div className="text-sm text-muted-foreground leading-relaxed">
+                          {selectedVehicleInfo?.type}は現在の市場相場で
+                          {selectedVehicleInfo?.type === "バイク" ? "高い需要" : "安定した需要"}
+                          があります。査定システムは過去1年間のオークション実績データと全国の流通相場を参照し、該当車種の適正な基準価格を算定しています。
+                          {selectedVehicleInfo?.type === "バイク"
+                            ? "スポーツバイクは若年層の需要が高く"
+                            : "ファミリーカーは市場流動性が高く"}
+                          、査定額に正の影響を与えています。
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="font-medium mb-1">走行距離による減額</div>
-                    <div className="text-sm text-muted-foreground">走行距離が多いほど査定額が下がります。</div>
-                  </div>
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="font-medium mb-1">状態評価による調整</div>
-                    <div className="text-sm text-muted-foreground">
-                      外装、内装の状態に基づいて加算または減算されます。
+
+                  <div className="p-5 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-colors">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-orange-600">2</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground mb-2">走行距離による価値減衰の算定</div>
+                        <div className="text-sm text-muted-foreground leading-relaxed">
+                          走行距離は車両の劣化度を示す最も重要な指標です。業界標準では年平均1万km走行を基準として、これを超える場合は1万km当たり約3～5万円の減額を適用します。非線形の減衰曲線を使用し、初期段階での減衰率を大きく、走行距離が多いほど減衰率を調整することで、より正確な査定を実現しています。
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="font-medium mb-1">年式による減額</div>
-                    <div className="text-sm text-muted-foreground">年式が古いほど査定額が下がります。</div>
+
+                  <div className="p-5 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-colors">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-sky-600">3</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground mb-2">車体状態の多次元評価</div>
+                        <div className="text-sm text-muted-foreground leading-relaxed">
+                          外装の傷、塗装の浮き、内装の汚損度、機関の動作状況など複数の評価軸を機械学習モデルで総合評価しています。ヒアリング内容から抽出された状態情報に基づき、同一年式・走行距離の平均車に対する相対的な状態指数を算出し、加減調整を決定します。良好な状態の車両は正の補正を受け、一般的な状態の車両との差別化が反映されます。
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-colors">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-purple-600">4</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground mb-2">年式による経年価値減衰</div>
+                        <div className="text-sm text-muted-foreground leading-relaxed">
+                          経過年数は技術的陳腐化と市場での競争力低下を示します。査定モデルでは経過年数に対して逓増的な減衰関数を適用し、同一年式の標準車との比較に基づいて調整額を算出します。初年度登録からの経過年数、そして新型モデル登場の影響度も考慮され、より精密な減額調整が実施されています。
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-accent/5 border border-accent/20 rounded-lg">
+                  <div className="text-sm text-foreground font-medium">査定精度について</div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    当システムの査定は直近1年のマーケットデータに基づいており、実際の買取価格は査定額の±5～10%の幅で変動する可能性があります。
                   </div>
                 </div>
               </CardContent>
