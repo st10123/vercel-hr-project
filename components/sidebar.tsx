@@ -21,8 +21,8 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
     <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="p-6 border-b border-sidebar-border">
-        <h2 className="text-lg font-semibold text-sidebar-foreground">HR評価システム</h2>
-        <p className="text-sm text-muted-foreground mt-1">Enterprise Edition</p>
+        <h2 className="text-lg font-semibold text-sidebar-foreground">AI見積もりシステム</h2>
+        <p className="text-sm text-muted-foreground mt-1">Vehicle Quote Edition</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
