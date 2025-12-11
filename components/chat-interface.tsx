@@ -28,46 +28,31 @@ const estimationTemplates = {
     description: "車やバイクの見積額を算出",
     questions: [
       {
-        question:
-          "こんにちは！車・バイクの見積もりサービスへようこそ。まず、見積もりの対象となる車両の種類を教えてください。",
+        question: "こちらの写真から判断すると、これは「ヤマハ YZF-R6」のようですが、これで合っていますか？",
         type: "multiple-choice",
-        options: ["軽自動車", "普通自動車", "バイク", "その他"],
-        key: "vehicle_type",
+        options: ["はい、その通りです", "いいえ、異なります"],
+        key: "bike_confirmed",
       },
       {
-        question: "車両の製造メーカーと車種を教えてください。",
-        type: "text",
-        key: "make_model",
-      },
-      {
-        question: "製造年（年式）を教えてください。",
+        question: "バイクの製造年（年式）を教えてください。",
         type: "text",
         key: "year",
       },
       {
-        question: "現在の走行距離を教えてください。",
+        question: "現在の走行距離を教えてください。（例：5,000km）",
         type: "text",
         key: "mileage",
       },
       {
-        question: "車両の状態について教えてください。（例：良好、標準的、経年劣化がある、修復歴あり等）",
+        question: "バイクの現在の状態について教えてください。（例：良好、標準的、傷あり、修復歴あり）",
         type: "text",
         key: "condition",
       },
       {
-        question: "内装や外装に傷やへこみなどがあれば詳しく教えてください。",
-        type: "text",
-        key: "damage_details",
-      },
-      {
-        question: "エンジンやその他機械的な問題や異常音があれば教えてください。",
+        question:
+          "エンジンやフレーム、機械的な問題や異常があれば教えてください。ない場合は「特になし」とお答えください。",
         type: "text",
         key: "mechanical_issues",
-      },
-      {
-        question: "その他、見積もりの際に考慮してほしい特記事項があれば教えてください。",
-        type: "text",
-        key: "additional_notes",
       },
     ],
   },
