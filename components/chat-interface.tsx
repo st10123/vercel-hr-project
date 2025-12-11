@@ -1,13 +1,14 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Send, Bot, User, Clock, CheckCircle, FileText } from "lucide-react"
+import { Send, Bot, User, Clock, CheckCircle, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Message {
@@ -21,165 +22,52 @@ interface Message {
   scale?: number
 }
 
-const evaluationTemplates = {
-  standard: {
-    name: "標準評価テンプレート",
-    description: "一般的な従業員評価用",
+const estimationTemplates = {
+  vehicle: {
+    name: "車・バイク見積もりテンプレート",
+    description: "車やバイクの見積額を算出",
     questions: [
       {
-        question: "こんにちは！人事評価のためのヒアリングを開始します。まず、評価対象者のお名前を教えてください。",
-        type: "text",
-        key: "employee_name",
-      },
-      {
-        question: "評価対象者の部署を教えてください。",
+        question:
+          "こんにちは！車・バイクの見積もりサービスへようこそ。まず、見積もりの対象となる車両の種類を教えてください。",
         type: "multiple-choice",
-        options: ["営業部", "開発部", "マーケティング部", "人事部", "財務部", "その他"],
-        key: "department",
+        options: ["軽自動車", "普通自動車", "バイク", "その他"],
+        key: "vehicle_type",
       },
       {
-        question: "評価対象者の現在の役職や担当業務について詳しく教えてください。",
+        question: "車両の製造メーカーと車種を教えてください。",
         type: "text",
-        key: "role_description",
+        key: "make_model",
       },
       {
-        question:
-          "この評価期間中に、評価対象者が担当した主要なプロジェクトや業務について教えてください。具体的な内容や規模も含めて説明してください。",
+        question: "製造年（年式）を教えてください。",
         type: "text",
-        key: "main_projects",
+        key: "year",
       },
       {
-        question:
-          "評価対象者の責任感について具体的なエピソードがあれば教えてください。例：締切を守る姿勢、問題発生時の対応、チームへの貢献など。",
+        question: "現在の走行距離を教えてください。",
         type: "text",
-        key: "responsibility_examples",
+        key: "mileage",
       },
       {
-        question:
-          "評価対象者の仕事の進め方やスピードについて教えてください。例：タスクの処理速度、効率性、時間管理能力など。",
+        question: "車両の状態について教えてください。（例：良好、標準的、経年劣化がある、修復歴あり等）",
         type: "text",
-        key: "work_speed_examples",
+        key: "condition",
       },
       {
-        question:
-          "評価対象者の仕事の正確性について教えてください。例：ミスの頻度、品質管理への取り組み、確認作業の丁寧さなど。",
+        question: "内装や外装に傷やへこみなどがあれば詳しく教えてください。",
         type: "text",
-        key: "accuracy_examples",
+        key: "damage_details",
       },
       {
-        question:
-          "評価対象者のコミュニケーション能力や協調性について教えてください。チームワークや他部署との連携はいかがでしたか？",
+        question: "エンジンやその他機械的な問題や異常音があれば教えてください。",
         type: "text",
-        key: "communication_teamwork",
+        key: "mechanical_issues",
       },
       {
-        question: "評価対象者の成長や改善が見られた点があれば教えてください。",
+        question: "その他、見積もりの際に考慮してほしい特記事項があれば教えてください。",
         type: "text",
-        key: "improvements",
-      },
-      {
-        question: "評価対象者に今後改善してほしい点や課題があれば教えてください。",
-        type: "text",
-        key: "areas_for_improvement",
-      },
-      {
-        question: "その他、評価対象者について特記すべき点や印象に残ったエピソードがあれば教えてください。",
-        type: "text",
-        key: "additional_comments",
-      },
-    ],
-  },
-  leadership: {
-    name: "リーダーシップ評価テンプレート",
-    description: "管理職・リーダー向け評価用",
-    questions: [
-      {
-        question:
-          "こんにちは！リーダーシップ評価のためのヒアリングを開始します。まず、評価対象者のお名前と役職を教えてください。",
-        type: "text",
-        key: "employee_name_position",
-      },
-      {
-        question: "評価対象者の部署と管理している人数を教えてください。",
-        type: "text",
-        key: "department_team_size",
-      },
-      {
-        question: "評価対象者のリーダーシップスタイルについて教えてください。チームをどのように導いていますか？",
-        type: "text",
-        key: "leadership_style",
-      },
-      {
-        question: "チームの目標達成に向けて、どのような取り組みを行いましたか？具体的な成果も含めて教えてください。",
-        type: "text",
-        key: "team_achievements",
-      },
-      {
-        question: "部下の育成やメンタリングについて、具体的な取り組みがあれば教えてください。",
-        type: "text",
-        key: "mentoring_examples",
-      },
-      {
-        question: "困難な状況や問題が発生した際の対応について教えてください。",
-        type: "text",
-        key: "crisis_management",
-      },
-      {
-        question: "他部署との連携や組織全体への貢献について教えてください。",
-        type: "text",
-        key: "cross_department_collaboration",
-      },
-      {
-        question: "戦略的思考や長期的な視点での取り組みがあれば教えてください。",
-        type: "text",
-        key: "strategic_thinking",
-      },
-    ],
-  },
-  technical: {
-    name: "技術職評価テンプレート",
-    description: "エンジニア・技術職向け評価用",
-    questions: [
-      {
-        question:
-          "こんにちは！技術職評価のためのヒアリングを開始します。まず、評価対象者のお名前と担当技術領域を教えてください。",
-        type: "text",
-        key: "employee_name_tech",
-      },
-      {
-        question: "評価対象者の技術領域と専門分野を教えてください。",
-        type: "text",
-        key: "technical_domain",
-      },
-      {
-        question: "この期間中に取り組んだ主要な技術プロジェクトについて教えてください。",
-        type: "text",
-        key: "technical_projects",
-      },
-      {
-        question: "新しい技術の習得や技術力向上への取り組みについて教えてください。",
-        type: "text",
-        key: "skill_development",
-      },
-      {
-        question: "コードの品質や技術的な正確性について教えてください。",
-        type: "text",
-        key: "code_quality",
-      },
-      {
-        question: "技術的な問題解決能力について具体例があれば教えてください。",
-        type: "text",
-        key: "problem_solving",
-      },
-      {
-        question: "チーム内での技術共有や知識の伝達について教えてください。",
-        type: "text",
-        key: "knowledge_sharing",
-      },
-      {
-        question: "技術的な革新や改善提案があれば教えてください。",
-        type: "text",
-        key: "technical_innovation",
+        key: "additional_notes",
       },
     ],
   },
@@ -188,27 +76,27 @@ const evaluationTemplates = {
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [isTyping, setIsTyping] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [evaluationData, setEvaluationData] = useState<{ [key: string]: any }>({})
-  const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof evaluationTemplates>("standard")
+  const [estimationData, setEstimationData] = useState<{ [key: string]: any }>({})
+  const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof estimationTemplates>("vehicle")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const evaluationQuestions = evaluationTemplates[selectedTemplate].questions
+  const estimationQuestions = estimationTemplates[selectedTemplate].questions
 
   useEffect(() => {
     const initializeChat = () => {
-      const firstQuestion = evaluationQuestions[0]
       const initialMessage: Message = {
         id: "initial",
         type: "bot",
-        content: firstQuestion.question,
+        content:
+          "お待たせしました！まず、見積もりの対象となる車両の写真をアップロードしていただけますか？外観がよくわかる角度からの写真をお願いします。",
         timestamp: new Date(),
-        questionType: firstQuestion.type as any,
-        options: firstQuestion.options,
+        questionType: "text",
       }
       setMessages([initialMessage])
-      setCurrentQuestion(1)
     }
 
     initializeChat()
@@ -220,66 +108,72 @@ export function ChatInterface() {
     }
   }, [messages])
 
-  const analyzeResponsesAndGenerateScores = (responses: { [key: string]: any }) => {
-    // Simple AI-like scoring based on keywords and response length
-    const analyzeResponsibility = (text: string) => {
-      const positiveKeywords = ["責任", "締切", "完了", "達成", "貢献", "積極的", "自主的", "信頼"]
-      const negativeKeywords = ["遅れ", "忘れ", "ミス", "問題", "不注意"]
+  const calculateEstimate = (data: { [key: string]: any }) => {
+    let basePrice = 1000000 // 基本価格
 
-      let score = 5 // Base score
-      positiveKeywords.forEach((keyword) => {
-        if (text.includes(keyword)) score += 0.8
-      })
-      negativeKeywords.forEach((keyword) => {
-        if (text.includes(keyword)) score -= 0.5
-      })
+    // 車種による価格調整
+    const vehicleTypeMultipliers: { [key: string]: number } = {
+      軽自動車: 0.8,
+      普通自動車: 1.0,
+      バイク: 0.4,
+      その他: 0.9,
+    }
+    basePrice *= vehicleTypeMultipliers[data.vehicle_type] || 1.0
 
-      if (text.length > 100) score += 0.5 // Detailed response bonus
-      return Math.min(Math.max(Math.round(score), 1), 10)
+    // 年式による減価
+    const yearMatch = data.year?.match(/(\d{4})/)
+    if (yearMatch) {
+      const year = Number.parseInt(yearMatch[1])
+      const age = new Date().getFullYear() - year
+      const depreciationRate = Math.max(0.3, 1 - age * 0.08)
+      basePrice *= depreciationRate
     }
 
-    const analyzeSpeed = (text: string) => {
-      const positiveKeywords = ["早い", "迅速", "効率", "スピード", "素早く", "短時間", "効率的"]
-      const negativeKeywords = ["遅い", "時間がかかる", "効率が悪い", "スローペース"]
-
-      let score = 5
-      positiveKeywords.forEach((keyword) => {
-        if (text.includes(keyword)) score += 0.8
-      })
-      negativeKeywords.forEach((keyword) => {
-        if (text.includes(keyword)) score -= 0.5
-      })
-
-      if (text.length > 100) score += 0.5
-      return Math.min(Math.max(Math.round(score), 1), 10)
+    // 走行距離による調整
+    const mileageMatch = data.mileage?.match(/(\d+)/)
+    if (mileageMatch) {
+      const mileage = Number.parseInt(mileageMatch[1])
+      const mileageDeduction = Math.min(mileage / 1000, 300) * 1000 // 最大30万円減
+      basePrice -= mileageDeduction
     }
 
-    const analyzeAccuracy = (text: string) => {
-      const positiveKeywords = ["正確", "丁寧", "確認", "品質", "チェック", "精密", "間違いない"]
-      const negativeKeywords = ["ミス", "間違い", "不正確", "雑", "確認不足"]
-
-      let score = 5
-      positiveKeywords.forEach((keyword) => {
-        if (text.includes(keyword)) score += 0.8
-      })
-      negativeKeywords.forEach((keyword) => {
-        if (text.includes(keyword)) score -= 0.5
-      })
-
-      if (text.length > 100) score += 0.5
-      return Math.min(Math.max(Math.round(score), 1), 10)
+    // 状態による調整
+    const conditionMultipliers: { [key: string]: number } = {
+      良好: 1.15,
+      標準的: 1.0,
+      経年劣化: 0.85,
+      修復歴: 0.7,
+    }
+    for (const [condition, multiplier] of Object.entries(conditionMultipliers)) {
+      if (data.condition?.includes(condition)) {
+        basePrice *= multiplier
+        break
+      }
     }
 
-    const responsibilityScore = analyzeResponsibility(responses.responsibility_examples || "")
-    const speedScore = analyzeSpeed(responses.work_speed_examples || "")
-    const accuracyScore = analyzeAccuracy(responses.accuracy_examples || "")
-    const overallScore = Math.round((responsibilityScore + speedScore + accuracyScore) / 3)
+    // ダメージによる減額
+    const damageDeduction = data.damage_details && data.damage_details.length > 30 ? 100000 : 0
+
+    // 機械的問題による減額
+    const mechanicalDeduction = data.mechanical_issues && data.mechanical_issues.length > 20 ? 150000 : 0
+
+    const finalPrice = Math.max(basePrice - damageDeduction - mechanicalDeduction, 10000)
 
     return {
-      responsibility: responsibilityScore,
-      speed: speedScore,
-      accuracy: accuracyScore,
-      overall: overallScore,
+      basePrice: Math.round(basePrice / 100) * 100,
+      vehicleTypeAdjustment:
+        Math.round((basePrice * (vehicleTypeMultipliers[data.vehicle_type] || 1.0) - basePrice) / 100) * 100,
+      depreciation: yearMatch
+        ? -Math.round(
+            (basePrice *
+              (1 - (Math.max(0.3, 1 - (new Date().getFullYear() - Number.parseInt(yearMatch[1])) * 0.08) || 1.0))) /
+              100,
+          ) * 100
+        : 0,
+      mileageDeduction: mileageMatch ? -Math.min(Number.parseInt(mileageMatch[1]) / 1000, 300) * 1000 : 0,
+      damageDeduction: -damageDeduction,
+      mechanicalDeduction: -mechanicalDeduction,
+      finalPrice: Math.round(finalPrice / 100) * 100,
     }
   }
 
@@ -295,10 +189,10 @@ export function ChatInterface() {
 
     setMessages((prev) => [...prev, userMessage])
 
-    if (currentQuestion > 0 && currentQuestion <= evaluationQuestions.length) {
-      const currentQ = evaluationQuestions[currentQuestion - 1]
+    if (currentQuestion > 0 && currentQuestion <= estimationQuestions.length) {
+      const currentQ = estimationQuestions[currentQuestion - 1]
       if (currentQ.key) {
-        setEvaluationData((prev) => ({
+        setEstimationData((prev) => ({
           ...prev,
           [currentQ.key]: inputValue,
         }))
@@ -311,8 +205,8 @@ export function ChatInterface() {
     setTimeout(() => {
       setIsTyping(false)
 
-      if (currentQuestion < evaluationQuestions.length) {
-        const nextQuestion = evaluationQuestions[currentQuestion]
+      if (currentQuestion < estimationQuestions.length) {
+        const nextQuestion = estimationQuestions[currentQuestion]
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: "bot",
@@ -320,24 +214,18 @@ export function ChatInterface() {
           timestamp: new Date(),
           questionType: nextQuestion.type as any,
           options: nextQuestion.options,
-          scale: nextQuestion.scale,
         }
 
         setMessages((prev) => [...prev, botMessage])
         setCurrentQuestion((prev) => prev + 1)
       } else {
-        const aiScores = analyzeResponsesAndGenerateScores(evaluationData)
+        const estimate = calculateEstimate(estimationData)
 
         const summary = `ヒアリングが完了しました。ご協力ありがとうございました。
 
-AIによる分析結果:
-• 責任感: ${aiScores.responsibility}/10
-• 仕事の早さ: ${aiScores.speed}/10
-• 正確性: ${aiScores.accuracy}/10
-• 総合評価: ${aiScores.overall}/10
+見積額: ${estimate.finalPrice.toLocaleString()}円
 
-※この評価は、ヒアリング内容をAIが分析して算出した参考値です。
-詳細な結果とヒアリング内容はレポート画面で確認できます。`
+※詳細な見積内訳は分析画面で確認できます。`
 
         const completionMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -348,24 +236,49 @@ AIによる分析結果:
         }
         setMessages((prev) => [...prev, completionMessage])
 
-        // Store AI scores for reports
-        setEvaluationData((prev) => ({
+        setEstimationData((prev) => ({
           ...prev,
-          ai_scores: aiScores,
+          estimate,
         }))
       }
     }, 1500)
   }
 
-  const handleQuickResponse = (option: string) => {
-    setInputValue(option)
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const imageData = event.target?.result as string
+        setUploadedImage(imageData)
+
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          type: "user",
+          content: "[写真をアップロードしました]",
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, userMessage])
+
+        setTimeout(() => {
+          const botMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: "bot",
+            content: estimationQuestions[0].question,
+            timestamp: new Date(),
+            questionType: "multiple-choice",
+            options: estimationQuestions[0].options,
+          }
+          setMessages((prev) => [...prev, botMessage])
+          setCurrentQuestion(1)
+        }, 1500)
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
-  const handleTemplateChange = (templateKey: string) => {
-    setSelectedTemplate(templateKey as keyof typeof evaluationTemplates)
-    setCurrentQuestion(0)
-    setEvaluationData({})
-    setInputValue("")
+  const handleQuickResponse = (option: string) => {
+    setInputValue(option)
   }
 
   return (
@@ -373,29 +286,10 @@ AIによる分析結果:
       <header className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">人事評価チャットボット</h1>
-            <p className="text-sm text-muted-foreground">従業員評価のためのヒアリングシステム</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="評価テンプレートを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(evaluationTemplates).map(([key, template]) => (
-                    <SelectItem key={key} value={key}>
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{template.name}</span>
-                        <span className="text-xs text-muted-foreground">{template.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="text-sm text-muted-foreground">評価期間: 2024年度 第4四半期</div>
+            <h1 className="text-2xl font-bold text-foreground">車・バイク見積もりチャットボット</h1>
+            <p className="text-sm text-muted-foreground">
+              写真アップロードと情報入力で、あなたの車・バイクの査定額を算出します
+            </p>
           </div>
         </div>
       </header>
@@ -409,20 +303,28 @@ AIによる分析結果:
                   <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-foreground">HR評価アシスタント</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {evaluationTemplates[selectedTemplate].name} | オンライン
-                  </p>
+                  <h3 className="font-medium text-foreground">見積もりアシスタント</h3>
+                  <p className="text-xs text-muted-foreground">オンライン</p>
                 </div>
               </div>
               <Badge variant="secondary" className="bg-accent text-accent-foreground">
-                進捗: {Math.min(currentQuestion, evaluationQuestions.length)}/{evaluationQuestions.length}
+                進捗: {currentQuestion}/{estimationQuestions.length}
               </Badge>
             </div>
           </div>
 
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
+              {uploadedImage && (
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={uploadedImage || "/placeholder.svg"}
+                    alt="Uploaded vehicle"
+                    className="max-w-xs max-h-xs rounded-lg border border-border"
+                  />
+                </div>
+              )}
+
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -502,7 +404,23 @@ AIによる分析結果:
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border space-y-3">
+            {currentQuestion === 0 && !uploadedImage && (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button onClick={() => fileInputRef.current?.click()} className="w-full">
+                  <Upload className="h-4 w-4 mr-2" />
+                  写真をアップロード
+                </Button>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Input
                 value={inputValue}
